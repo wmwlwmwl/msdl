@@ -9,9 +9,9 @@ const productsList = document.getElementById('products-list');
 const backToProductsDiv = document.getElementById('back-to-products');
 
 let availableProducts = {};
-let skuId;
+let skuId = null; // 初始化skuId为null，避免默认值干扰
 
-// 最终完整版语言映射表
+// 最终完整版语言映射表（包含所有语言）
 const languageMap = {
     "Arabic": "阿拉伯语",
     "Brazilian Portuguese": "巴西葡萄牙语",
@@ -60,16 +60,19 @@ function uuidv4() {
     );
 }
 
+// 修复：更新选中语言时同步skuId
 function updateVars() {
     let id = document.getElementById('product-languages').value;
-    if (id == "") {
+    if (id === "") {
         document.getElementById('submit-sku').disabled = 1;
-        return;
+        skuId = null;
+        return null;
     }
 
     document.getElementById('submit-sku').disabled = 0;
-
-    return JSON.parse(id)['id'];
+    const selectedData = JSON.parse(id);
+    skuId = selectedData.id; // 关键：将选中的语言ID赋值给skuId
+    return selectedData.id;
 }
 
 function langJsonStrToHTML(jsonStr) {
@@ -93,25 +96,32 @@ function langJsonStrToHTML(jsonStr) {
     defaultOption.textContent = "选择一个";
     select.appendChild(defaultOption);
 
+    let hasChineseSimplified = false;
     json.Skus.forEach(sku => {
         let option = document.createElement('option');
         option.value = JSON.stringify({ id: sku.Id });
-        // 兜底逻辑：有映射显示中文，无映射显示原英文
         option.textContent = languageMap[sku.LocalizedLanguage] || sku.LocalizedLanguage;
-        // 默认选中中文（简体）
+
+        // 可选：默认选中中文（简体），但不强制赋值skuId（由change事件更新）
         if (sku.LocalizedLanguage === "Chinese Simplified") {
             option.selected = "selected";
-            skuId = sku.Id;
+            hasChineseSimplified = true;
         }
+
         select.appendChild(option);
     });
+
+    // 若有中文（简体），初始化时触发一次更新
+    if (hasChineseSimplified) {
+        setTimeout(() => updateVars(), 0);
+    }
 
     container.appendChild(select);
 
     let button = document.createElement('button');
     button.id = "submit-sku";
     button.textContent = "提交";
-    button.disabled = true;
+    button.disabled = !hasChineseSimplified; // 有默认选中则启用按钮
     button.setAttribute("onClick", "getDownload();");
 
     container.appendChild(button);
@@ -136,17 +146,39 @@ function onLanguageXhrChange() {
     submitSku.setAttribute("onClick", "getDownload();");
 
     let prodLang = document.getElementById('product-languages');
+    // 绑定change事件，确保切换语言时更新skuId
     prodLang.setAttribute("onChange", "updateVars();");
 
-    if (skuId) {
-        document.getElementById('submit-sku').disabled = 0;
-    }
+    // 初始化时更新一次变量
     updateVars();
+}
+
+// 修复：强制获取最新选中的skuId，不再依赖旧值
+function getDownload() {
+    // 先更新最新的选中值
+    const latestSkuId = updateVars();
+    
+    // 未选择语言时提示并终止
+    if (!latestSkuId) {
+        alert("请先选择有效的语言！");
+        return;
+    }
+
+    msContent.style.display = "none";
+    pleaseWait.style.display = "block";
+
+    let url = `${apiUrl}proxy?product_id=${window.location.hash.substring(1)}&sku_id=${latestSkuId}`;
+
+    let xhr = new XMLHttpRequest();
+    xhr.onload = onDownloadsXhrChange;
+    xhr.open("GET", url, true);
+    xhr.send();
 }
 
 function onDownloadsXhrChange() {
     if (!(this.status == 200)) {
         processingError.style.display = "block";
+        pleaseWait.style.display = "none";
         return;
     }
 
@@ -196,20 +228,6 @@ function getLanguages(productId) {
     xhr.send();
 }
 
-function getDownload() {
-    msContent.style.display = "none";
-    pleaseWait.style.display = "block";
-
-    skuId = skuId ? skuId : updateVars();
-
-    let url = apiUrl + "proxy" + "?product_id=" + window.location.hash.substring(1) + "&sku_id=" + skuId;
-
-    let xhr = new XMLHttpRequest();
-    xhr.onload = onDownloadsXhrChange;
-    xhr.open("GET", url, true);
-    xhr.send();
-}
-
 function backToProducts() {
     backToProductsDiv.style.display = 'none';
     productsList.style.display = 'block';
@@ -218,7 +236,7 @@ function backToProducts() {
     processingError.style.display = 'none';
 
     window.location.hash = "";
-    skuId = null;
+    skuId = null; // 重置skuId
 }
 
 function prepareDownload(id) {
@@ -292,8 +310,10 @@ function preparePage(resp) {
     checkHash();
 }
 
+// 初始化sessionId
 sessionId.value = uuidv4();
 
+// 加载产品列表
 let xhr = new XMLHttpRequest();
 xhr.onload = function () {
     if (this.status != 200) {
@@ -306,4 +326,5 @@ xhr.onload = function () {
 xhr.open("GET", 'data/products.json', true);
 xhr.send();
 
+// 显示加载状态
 pleaseWait.style.display = 'block';

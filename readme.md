@@ -4,7 +4,7 @@ Microsoft 软件下载列表允许你浏览和下载微软软件下载页面上�
 
 产品列表
 -------------
-页面上可用的产品列表位于`data/products.json`文件中。当新版本的Windows在https://www.microsoft.com/software-download发布时，应更新此文件。
+页面上可用的产品列表位于 `data/products.json` 文件中。当 Windows 新版本在 https://www.microsoft.com/software-download 发布时，此文件应进行更新。
 
 许可证
 -------

@@ -11,13 +11,14 @@ const backToProductsDiv = document.getElementById('back-to-products');
 let availableProducts = {};
 let skuId;
 
-// 完整语言映射表（覆盖所有接口返回的语言）
+// 最终完整版语言映射表
 const languageMap = {
     "Arabic": "阿拉伯语",
     "Brazilian Portuguese": "巴西葡萄牙语",
     "Bulgarian": "保加利亚语",
     "Chinese Simplified": "中文（简体）",
     "Chinese Traditional": "中文（繁体）",
+    "Chinese Traditional Hong Kong": "中文（繁体香港）",
     "Croatian": "克罗地亚语",
     "Czech": "捷克语",
     "Danish": "丹麦语",
@@ -95,8 +96,8 @@ function langJsonStrToHTML(jsonStr) {
     json.Skus.forEach(sku => {
         let option = document.createElement('option');
         option.value = JSON.stringify({ id: sku.Id });
-        // 核心：映射为中文
-        option.textContent = languageMap[sku.LocalizedLanguage];
+        // 兜底逻辑：有映射显示中文，无映射显示原英文
+        option.textContent = languageMap[sku.LocalizedLanguage] || sku.LocalizedLanguage;
         // 默认选中中文（简体）
         if (sku.LocalizedLanguage === "Chinese Simplified") {
             option.selected = "selected";

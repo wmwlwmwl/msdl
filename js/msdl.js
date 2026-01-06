@@ -1,4 +1,4 @@
-const apiUrl = "https://api.gravesoft.dev/msdl/"
+const apiUrl = "https://api.gravesoft.dev/msdl/";
 
 const sessionId = document.getElementById('msdl-session-id');
 const msContent = document.getElementById('msdl-ms-content');
@@ -10,6 +10,48 @@ const backToProductsDiv = document.getElementById('back-to-products');
 
 let availableProducts = {};
 let skuId;
+
+// 完整语言映射表（覆盖所有接口返回的语言）
+const languageMap = {
+    "Arabic": "阿拉伯语",
+    "Brazilian Portuguese": "巴西葡萄牙语",
+    "Bulgarian": "保加利亚语",
+    "Chinese Simplified": "中文（简体）",
+    "Chinese Traditional": "中文（繁体）",
+    "Croatian": "克罗地亚语",
+    "Czech": "捷克语",
+    "Danish": "丹麦语",
+    "Dutch": "荷兰语",
+    "English (United States)": "英语（美国）",
+    "English International": "英语（国际）",
+    "Estonian": "爱沙尼亚语",
+    "Finnish": "芬兰语",
+    "French": "法语",
+    "French Canadian": "法语（加拿大）",
+    "German": "德语",
+    "Greek": "希腊语",
+    "Hebrew": "希伯来语",
+    "Hungarian": "匈牙利语",
+    "Italian": "意大利语",
+    "Japanese": "日语",
+    "Korean": "韩语",
+    "Latvian": "拉脱维亚语",
+    "Lithuanian": "立陶宛语",
+    "Norwegian": "挪威语",
+    "Polish": "波兰语",
+    "Portuguese": "葡萄牙语",
+    "Romanian": "罗马尼亚语",
+    "Russian": "俄语",
+    "Serbian Latin": "塞尔维亚语（拉丁语）",
+    "Slovak": "斯洛伐克语",
+    "Slovenian": "斯洛文尼亚语",
+    "Spanish": "西班牙语",
+    "Spanish (Mexico)": "西班牙语（墨西哥）",
+    "Swedish": "瑞典语",
+    "Thai": "泰语",
+    "Turkish": "土耳其语",
+    "Ukrainian": "乌克兰语"
+};
 
 function uuidv4() {
     return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
@@ -34,11 +76,11 @@ function langJsonStrToHTML(jsonStr) {
     let container = document.createElement('div');
 
     let header = document.createElement('h2');
-    header.textContent = "Select the product language";
+    header.textContent = "选择产品语言";
     container.appendChild(header);
 
     let info = document.createElement('p');
-    info.innerHTML = "You'll need to choose the same language when you install Windows. To see what language you're currently using, go to <strong>Time and language</strong> in PC settings or <strong>Region</strong> in Control Panel.";
+    info.innerHTML = "安装 Windows 时，您需要选择相同的语言。要查看当前使用的语言，请转到<strong>“电脑设置”</strong>中的<strong>“时间和语言”</strong>或<strong>“控制面板”</strong>中的<strong>“区域”</strong>。";
     container.appendChild(info);
 
     let select = document.createElement('select');
@@ -47,13 +89,19 @@ function langJsonStrToHTML(jsonStr) {
     let defaultOption = document.createElement('option');
     defaultOption.value = "";
     defaultOption.selected = "selected";
-    defaultOption.textContent = "Choose one";
+    defaultOption.textContent = "选择一个";
     select.appendChild(defaultOption);
 
     json.Skus.forEach(sku => {
         let option = document.createElement('option');
         option.value = JSON.stringify({ id: sku.Id });
-        option.textContent = sku.LocalizedLanguage;
+        // 核心：映射为中文
+        option.textContent = languageMap[sku.LocalizedLanguage];
+        // 默认选中中文（简体）
+        if (sku.LocalizedLanguage === "Chinese Simplified") {
+            option.selected = "selected";
+            skuId = sku.Id;
+        }
         select.appendChild(option);
     });
 
@@ -61,7 +109,7 @@ function langJsonStrToHTML(jsonStr) {
 
     let button = document.createElement('button');
     button.id = "submit-sku";
-    button.textContent = "Submit";
+    button.textContent = "提交";
     button.disabled = true;
     button.setAttribute("onClick", "getDownload();");
 
@@ -81,8 +129,7 @@ function onLanguageXhrChange() {
     msContent.style.display = "block";
 
     let langHtml = langJsonStrToHTML(this.responseText);
-
-    msContent.innerHTML = langHtml
+    msContent.innerHTML = langHtml;
 
     let submitSku = document.getElementById('submit-sku');
     submitSku.setAttribute("onClick", "getDownload();");
@@ -90,6 +137,9 @@ function onLanguageXhrChange() {
     let prodLang = document.getElementById('product-languages');
     prodLang.setAttribute("onChange", "updateVars();");
 
+    if (skuId) {
+        document.getElementById('submit-sku').disabled = 0;
+    }
     updateVars();
 }
 
@@ -109,23 +159,31 @@ function onDownloadsXhrChange() {
 
     if (response.ProductDownloadOptions && response.ProductDownloadOptions.length > 0) {
         let header = document.createElement('h2');
-        header.textContent = `${response.ProductDownloadOptions[0].ProductDisplayName} ${response.ProductDownloadOptions[0].LocalizedLanguage}`
+        let displayLang = response.ProductDownloadOptions[0].LocalizedLanguage;
+        let chineseLang = languageMap[displayLang] || displayLang;
+        header.textContent = `${response.ProductDownloadOptions[0].ProductDisplayName} ${chineseLang}`;
         msContent.appendChild(header);
 
         response.ProductDownloadOptions.forEach(option => {
             let downloadButton = document.createElement('a');
             downloadButton.href = option.Uri;
             let raw_link = option.Uri.split('?')[0];
-            downloadButton.textContent = raw_link.split('/').pop();;
+            downloadButton.textContent = raw_link.split('/').pop();
             downloadButton.target = "_blank";
+            downloadButton.style.display = "block";
+            downloadButton.style.margin = "8px 0";
+            downloadButton.style.padding = "4px 8px";
+            downloadButton.style.textDecoration = "none";
+            downloadButton.style.backgroundColor = "#0078d7";
+            downloadButton.style.color = "white";
+            downloadButton.style.borderRadius = "4px";
 
             let br = document.createElement('br');
-
             msContent.appendChild(downloadButton);
             msContent.appendChild(br);
         });
     } else {
-        msContent.innerHTML = "<p>No download options available.</p>";
+        msContent.innerHTML = "<p>没有可用的下载选项。</p>";
     }
 }
 
@@ -213,9 +271,9 @@ function setSearch(query) {
 function checkHash() {
     let hash = window.location.hash;
     if (hash.length == 0)
-        return
+        return;
 
-    prepareDownload(hash.substring(1))
+    prepareDownload(hash.substring(1));
 }
 
 function preparePage(resp) {
@@ -236,17 +294,14 @@ function preparePage(resp) {
 sessionId.value = uuidv4();
 
 let xhr = new XMLHttpRequest();
-
 xhr.onload = function () {
     if (this.status != 200) {
         pleaseWait.style.display = 'none';
         processingError.style.display = 'block';
         return;
     }
-
     preparePage(this.responseText);
 };
-
 xhr.open("GET", 'data/products.json', true);
 xhr.send();
 

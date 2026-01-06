@@ -15,7 +15,7 @@
         content="Microsoft Software Download Listing lets you browse and download products from Microsoft Software Download.">
     <meta property="og:image" content="/img/cover.png">
 
-    <title>Microsoft Software Download Listing</title>
+    <title>Microsoft 软件下载列表</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.min.css">
     <link rel="stylesheet" href="css/style.css">
@@ -23,7 +23,7 @@
 </head>
 
 <body>
-    <h1>Microsoft Software Download Listing 🏳️‍🌈</h1>
+    <h1>Microsoft 软件下载列表 🏳️‍🌈</h1>
 
     <a href="https://github.com/gravesoft/msdl">
         <b>Source code on GitHub</b>
@@ -34,18 +34,18 @@
     </noscript>
 
     <div id="products-list">
-        <h2>Select product</h2>
+        <h2>选择产品</h2>
         <input id="search-products" type="search" placeholder="Search with regex..." onInput="updateResults();">
         <div id="quick-search">
             📌
             <button onClick="setSearch('Windows 8\\.1');">Windows 8.1</button>
-            <button onClick="setSearch('Windows 10 22H2');">Latest Windows 10</button>
-            <button onClick="setSearch('25H2');">Latest Windows 11</button>
+            <button onClick="setSearch('Windows 10 22H2');">最新的 Windows 10</button>
+            <button onClick="setSearch('25H2');">最新的 Windows 11</button>
         </div>
         <table style="table-layout: auto;">
             <thead>
                 <tr>
-                    <th>Product</th>
+                    <th>产品</th>
                     <th>ID</th>
                 </tr>
             </thead>
@@ -56,19 +56,19 @@
     <div id="msdl-ms-content"></div>
 
     <div id="msdl-please-wait">
-        <h2>Please wait...</h2>
-        <p>Please wait while the data you requested is being retrieved.</p>
+        <h2>请稍候……</h2>
+        <p>请稍候，正在检索您请求的数据。</p>
     </div>
 
     <div id="msdl-processing-error">
-        <h2>Error</h2>
-        <p>An error has occurred while processing your request. If reloading the page does not work, <a
-                href="https://gravesoft.dev/troubleshoot/">contact us</a> or create an issue on GitHub.</p>
+        <h2>错误</h2>
+        <p>处理您的请求时发生了错误。如果重新加载页面不起作用，<a
+                href="https://gravesoft.dev/troubleshoot/">联系我们</a> 或者在GitHub上创建一个问题。</p>
     </div>
 
     <div id="back-to-products">
         <hr>
-        <button onClick="backToProducts();">Go back to the product list</button>
+        <button onClick="backToProducts();">返回产品列表</button>
     </div>
 
     <input id="msdl-session-id" type="hidden">
